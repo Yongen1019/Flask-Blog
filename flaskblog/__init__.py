@@ -2,8 +2,9 @@ from flask import Flask, render_template, flash, request
 from flask_wtf import FlaskForm
 from wtforms import StringField, SubmitField
 from wtforms.validators import DataRequired
-from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
+from flask_sqlalchemy import SQLAlchemy
+from flask_migrate import Migrate
 
 # initialize the database
 db = SQLAlchemy()
@@ -20,12 +21,14 @@ def create_app():
     app.secret_key = 'hday9o32ej382jjdi09hh3'
 
     db.init_app(app)
+    migrate = Migrate(app, db)
 
     # create model
     class Users(db.Model):
         id = db.Column(db.Integer, primary_key=True)
         name = db.Column(db.String(200), nullable=False)
         email = db.Column(db.String(120), nullable=False, unique=True)
+        mobile = db.Column(db.String(120))
         date_added = db.Column(db.DateTime, default=datetime.now)
 
         # create a string
@@ -36,6 +39,7 @@ def create_app():
     class UserForm(FlaskForm):
         name = StringField("Name", validators=[DataRequired()])
         email = StringField("Email", validators=[DataRequired()])
+        mobile = StringField("Mobile")
         submit = SubmitField("Submit")
 
     # create a form class
@@ -81,9 +85,10 @@ def create_app():
             # check if database consist the same email
             name = form.name.data
             email = form.email.data
+            mobile = form.mobile.data
             user = Users.query.filter_by(email=email).first()
             if user is None:
-                user = Users(name=name, email=email)
+                user = Users(name=name, email=email, mobile=mobile)
                 db.session.add(user)
                 db.session.commit()
                 message = "User Added Successfully"
@@ -92,6 +97,7 @@ def create_app():
             
             form.name.data = ''
             form.email.data = ''
+            form.mobile.data = ''
             flash(message)
 
         user_list = Users.query.order_by(Users.date_added)
@@ -110,6 +116,7 @@ def create_app():
         if request.method == 'POST':
             user_to_update.name = request.form['name']
             user_to_update.email = request.form['email']
+            user_to_update.mobile = request.form['mobile']
             try:
                 # save into database
                 db.session.commit()
@@ -122,32 +129,6 @@ def create_app():
             'user_to_update': user_to_update
         }
         return render_template('user_management/update_user.html', **context)
-
-        # validate form
-        if form.validate_on_submit():
-            # check if database consist the same email
-            name = form.name.data
-            email = form.email.data
-            user = Users.query.filter_by(email=email).first()
-            if user is None:
-                user = Users(name=name, email=email)
-                db.session.add(user)
-                db.session.commit()
-                message = "User Added Successfully"
-            else:
-                message = "Email Registered Before"
-            
-            form.name.data = ''
-            form.email.data = ''
-            flash(message)
-
-        user_list = Users.query.order_by(Users.date_added)
-
-        context = {
-            'form': form,
-            'user_list': user_list
-        }
-        return render_template('user_management/add_user.html', **context)
 
     # create custom error pages
 
