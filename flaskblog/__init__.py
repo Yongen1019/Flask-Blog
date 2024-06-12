@@ -2,6 +2,7 @@ from flask import Flask, render_template, flash, request
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, SubmitField, BooleanField, ValidationError
 from wtforms.validators import DataRequired, EqualTo, Length
+from wtforms.widgets import TextArea
 from datetime import datetime
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
@@ -10,13 +11,13 @@ from werkzeug.security import generate_password_hash, check_password_hash
 # initialize the database
 db = SQLAlchemy()
 
-# create model
+# create a user model
 class Users(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(200), nullable=False)
     email = db.Column(db.String(120), nullable=False, unique=True)
     mobile = db.Column(db.String(120))
-    date_added = db.Column(db.DateTime, default=datetime.now)
+    date_added = db.Column(db.DateTime, default=datetime.now())
     # password stuff
     password_hash = db.Column(db.String(128))
 
@@ -35,6 +36,14 @@ class Users(db.Model):
     def __repr__(self):
         return '<Name %r>' % self.name
     
+# create a blog post model
+class Posts(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(255))
+    content = db.Column(db.Text)
+    author = db.Column(db.String(255))
+    date_posted = db.Column(db.DateTime, default=datetime.now())
+    slug = db.Column(db.String(255))
 
 def create_app():
     # create a flask instance
@@ -68,6 +77,14 @@ def create_app():
     # create a form class
     class NamerForm(FlaskForm):
         name = StringField("What is your name", validators=[DataRequired()])
+        submit = SubmitField("Submit")
+
+    # create a post form class
+    class PostForm(FlaskForm):
+        title = StringField("Title", validators=[DataRequired()])
+        content = StringField("Content", validators=[DataRequired()], widget=TextArea())
+        author = StringField("Author", validators=[DataRequired()])
+        slug = StringField("Slug", validators=[DataRequired()])
         submit = SubmitField("Submit")
 
     # create a route decorator
@@ -178,6 +195,32 @@ def create_app():
         }
         return render_template('user_management/add_user.html', **context)
 
+    @app.route('/post/add', methods=['GET', 'POST'])
+    def add_post():
+        form = PostForm()
+
+        if form.validate_on_submit():
+            title = form.title.data
+            content = form.content.data
+            author = form.author.data
+            slug = form.slug.data
+            post = Posts(title=title, content=content, author=author, slug=slug)
+
+            form.title.data = ''
+            form.content.data = ''
+            form.author.data = ''
+            form.slug.data = ''
+
+            db.session.add(post)
+            db.session.commit()
+
+            flash("Blog Post Submitted Successfully")
+
+        content = {
+            'form': form
+        }
+        return render_template('post_management/add_post.html', **content)
+
     # create custom error pages
 
     # invalid url
@@ -222,5 +265,16 @@ def create_app():
             'form': form
         }
         return render_template('user_management/test_pw.html', **context)
+    
+    # JSON API
+    @app.route('/date')
+    def get_current_datetime():
+        users = {
+            "John": "john@gmail.com",
+            "Yunna": "yunna@gmail.com",
+            "Yang": "yang@gmail.com"
+        } 
+        return users
+        #return {"DateTime": datetime.now()}
 
     return app
