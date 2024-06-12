@@ -130,6 +130,27 @@ def create_app():
         }
         return render_template('user_management/update_user.html', **context)
 
+    @app.route('/user/delete/<int:id>')
+    def delete_user(id):
+        form = UserForm()
+
+        user_to_delete = Users.query.get_or_404(id)
+
+        try:
+            db.session.delete(user_to_delete)
+            db.session.commit()
+            flash("User Deleted Successfully")
+        except:
+            flash("User Not Found")
+
+        user_list = Users.query.order_by(Users.date_added)
+
+        context = {
+            'form': form,
+            'user_list': user_list
+        }
+        return render_template('user_management/add_user.html', **context)
+
     # create custom error pages
 
     # invalid url

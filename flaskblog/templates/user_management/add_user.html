@@ -39,6 +39,7 @@
             <th>Name</th>
             <th>Email</th>
             <th>Mobile</th>
+            <th>Action</th>
         </tr>
     </thead>
     <tbody>
@@ -48,6 +49,7 @@
                 <td><a href="{{ url_for('update_user', id=user.id) }}" class="link-secondary link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover">{{ user.name }}</a></td> 
                 <td>{{ user.email }}</td>
                 <td>{{ user.mobile }}</td>
+                <td><a href="{{ url_for('delete_user', id=user.id) }}" class="link-secondary link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover">Remove</a></td>
             </tr>
         {% endfor %}
     </tbody>
