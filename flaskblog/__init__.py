@@ -2,8 +2,8 @@ from flask import Flask, render_template, flash, redirect, url_for
 from flask_migrate import Migrate
 from werkzeug.security import check_password_hash
 from flask_login import login_user, LoginManager, login_required, logout_user
-from webforms import LoginForm, PasswordForm
-from models import db, Users
+from webforms import LoginForm, PasswordForm, SearchForm
+from models import db, Users, Posts
 from .views.user_management import manage_users
 from .views.post_management import manage_posts
 
@@ -29,6 +29,12 @@ def create_app():
     @login_manager.user_loader
     def load_user(user_id):
         return Users.query.get(int(user_id))
+    
+    # pass stuff to navbar
+    @app.context_processor
+    def base():
+        form = SearchForm()
+        return dict(form=form)
 
     # create a route decorator
     @app.route('/', methods=['GET', 'POST'])
@@ -67,13 +73,24 @@ def create_app():
     def dashboard():
         return render_template('dashboard.html')
     
+    @app.route('/search', methods=['POST'])
+    def search():
+        form = SearchForm()
+    
+        if form.validate_on_submit():
+            search_input = form.search_input.data
+            posts = Posts.query.filter(Posts.content.like('%' + search_input + '%')).order_by(Posts.title).all()
+
+            content = {
+                'posts': posts
+            }
+            return render_template('search.html', **content)
+    
     app.register_blueprint(manage_users, url_prefix='/user')
     app.register_blueprint(manage_posts, url_prefix='/post')
     
 
-    
-
-    # create custom error pages
+    # custom error pages
 
     # invalid url
     @app.errorhandler(404)
@@ -85,6 +102,9 @@ def create_app():
     def internal_server_error(e):
         return render_template('error/500.html'), 500
     
+
+    # test pages
+
     # test hashed password
     @app.route('/test_pw', methods=['GET', 'POST'])
     def test_pw():
