@@ -34,7 +34,6 @@ def profile(name):
     return render_template('user_management/profile.html', **context)
 
 @manage_users.route('/add', methods=['GET', 'POST'])
-@login_required
 def add_user():
     form = UserForm()
 

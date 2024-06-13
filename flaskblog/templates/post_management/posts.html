@@ -3,7 +3,7 @@
 {% block content %}
 
 {% for message in get_flashed_messages() %}
-    <div class="alert alert-success alert-dismissible fade show" role="alert">
+    <div class="alert alert-warning alert-dismissible fade show" role="alert">
         <strong>{{ message }}</strong>
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
@@ -19,7 +19,7 @@
         <p class="mt-4 text-truncate">{{ post.content }}</p>
         <p class="small text-muted">
             <span><a href="{{ url_for('post_management.post', id=post.id)}}" class="text-decoration-none">View</a></span>
-            <span class="float-end">By: {{ post.author }} | {{ post.date_posted }}</span>
+            <span class="float-end">By: {{ post.user.name }} | {{ post.date_posted }}</span>
         </p>
     </div>
 {% endfor %}

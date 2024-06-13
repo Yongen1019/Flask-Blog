@@ -13,16 +13,20 @@
 
 <a href="{{ url_for('post_management.posts')}}" class="float-end btn btn-secondary">Back</a>
 
-<a href="{{ url_for('post_management.delete_post', id=post.id )}}" class="me-3 float-end btn btn-danger">Delete</a>
+{% if current_user.id == post.user_id %}
 
-<a href="{{ url_for('post_management.update_post', id=post.id )}}" class="me-3 float-end btn btn-success">Update</a>
+    <a href="{{ url_for('post_management.delete_post', id=post.id )}}" class="me-3 float-end btn btn-danger">Delete</a>
+
+    <a href="{{ url_for('post_management.update_post', id=post.id )}}" class="me-3 float-end btn btn-success">Update</a>
+
+{% endif %}
 
 <br><br>
 
 <div class="shadow p-3 mb-5 bg-body-tertiary rounded">
     <h4>{{ post.title }}</h4>
     <p class="mt-4">{{ post.content }}</p>
-    <p class="small text-muted text-end">By: {{ post.author }} | {{ post.date_posted }}
+    <p class="small text-muted text-end">By: {{ post.user.name }} | {{ post.date_posted }}
 </div>
 
 {% endblock %}

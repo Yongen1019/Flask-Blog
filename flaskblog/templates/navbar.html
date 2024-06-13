@@ -6,6 +6,9 @@
       </button>
       <div class="collapse navbar-collapse" id="navbarSupportedContent">
         <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+          <li class="nav-item">
+            <a class="nav-link" href="{{ url_for('post_management.posts') }}">Posts</a>
+          </li>
           {% if current_user.is_authenticated %}
             <li class="nav-item">
               <li class="nav-item">
@@ -13,9 +16,6 @@
               </li>
               <li class="nav-item">
                 <a class="nav-link" href="{{ url_for('user_management.name') }}">Name</a>
-              </li>
-              <li class="nav-item">
-                <a class="nav-link" href="{{ url_for('post_management.posts') }}">Posts</a>
               </li>
               <li class="nav-item">
                 <a class="nav-link" href="{{ url_for('user_management.profile', name='Yunna') }}">Profile</a>
