@@ -1,51 +1,11 @@
-from flask import Flask, render_template, flash, request, redirect, url_for
-from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, SubmitField, BooleanField, ValidationError
-from wtforms.validators import DataRequired, EqualTo, Length
-from wtforms.widgets import TextArea
-from datetime import datetime
-from flask_sqlalchemy import SQLAlchemy
+from flask import Flask, render_template, flash, redirect, url_for
 from flask_migrate import Migrate
-from werkzeug.security import generate_password_hash, check_password_hash
-from flask_login import UserMixin, login_user, LoginManager, login_required, logout_user, current_user
-
-# initialize the database
-db = SQLAlchemy()
-
-# create a user model
-class Users(db.Model, UserMixin):
-    id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(20), nullable=False, unique=True)
-    name = db.Column(db.String(200), nullable=False)
-    email = db.Column(db.String(120), nullable=False, unique=True)
-    mobile = db.Column(db.String(120))
-    date_added = db.Column(db.DateTime, default=datetime.now())
-    # password stuff
-    password_hash = db.Column(db.String(128))
-
-    @property
-    def password(self):
-        raise AttributeError('Password is not a readable attribute!')
-        
-    @password.setter
-    def password(self, password):
-        self.password_hash = generate_password_hash(password)
-
-    def verify_password(self, password):
-        return check_password_hash(self.password_hash, password)
-
-    # create a string
-    def __repr__(self):
-        return '<Name %r>' % self.name
-    
-# create a blog post model
-class Posts(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    title = db.Column(db.String(255))
-    content = db.Column(db.Text)
-    author = db.Column(db.String(255))
-    date_posted = db.Column(db.DateTime, default=datetime.now())
-    slug = db.Column(db.String(255))
+from werkzeug.security import check_password_hash
+from flask_login import login_user, LoginManager, login_required, logout_user
+from webforms import LoginForm, PasswordForm
+from models import db, Users
+from .views.user_management import manage_users
+from .views.post_management import manage_posts
 
 def create_app():
     # create a flask instance
@@ -61,236 +21,57 @@ def create_app():
     db.init_app(app)
     migrate = Migrate(app, db)
 
-    # create a form class
-    class UserForm(FlaskForm):
-        name = StringField("Name", validators=[DataRequired()])
-        username = StringField("Username", validators=[DataRequired()])
-        email = StringField("Email", validators=[DataRequired()])
-        mobile = StringField("Mobile")
-        password_hash = PasswordField('Password', validators=[DataRequired(), EqualTo('password_hash2', message='Password must match!!')])
-        password_hash2 = PasswordField('Confirm Password', validators=[DataRequired()])
-        submit = SubmitField("Submit")
+    # Flask_Login stuff
+    login_manager = LoginManager()
+    login_manager.init_app(app)
+    login_manager.login_view = 'login'
 
-    # create a form class
-    class PasswordForm(FlaskForm):
-        email = StringField("Email", validators=[DataRequired()])
-        password_hash = PasswordField('Password', validators=[DataRequired()])
-        submit = SubmitField("Submit")
-
-    # create a form class
-    class NamerForm(FlaskForm):
-        name = StringField("What is your name", validators=[DataRequired()])
-        submit = SubmitField("Submit")
-
-    # create a post form class
-    class PostForm(FlaskForm):
-        title = StringField("Title", validators=[DataRequired()])
-        content = StringField("Content", validators=[DataRequired()], widget=TextArea())
-        author = StringField("Author", validators=[DataRequired()])
-        slug = StringField("Slug", validators=[DataRequired()])
-        submit = SubmitField("Submit")
+    @login_manager.user_loader
+    def load_user(user_id):
+        return Users.query.get(int(user_id))
 
     # create a route decorator
-    @app.route('/')
-    def index():
-        return "Hello"
-    
-    @app.route('/profile/<name>')
-    def profile(name):
-        context = {
-            'name': name
-        }
-        return render_template('user_management/profile.html', **context)
-    
-    @app.route('/name', methods=['GET', 'POST'])
-    def name():
-        name = None
-        form = NamerForm()
+    @app.route('/', methods=['GET', 'POST'])
+    def login():
+        form = LoginForm()
 
-        # validate form
         if form.validate_on_submit():
-            name = form.name.data
-            form.name.data = ''
-            flash("Form Submitted Successful")
-
-        context = {
-            'name': name,
-            'form': form
-        }
-        return render_template('user_management/name.html', **context)
-
-    @app.route('/user/add', methods=['GET', 'POST'])
-    def add_user():
-        form = UserForm()
-
-        # validate form
-        if form.validate_on_submit():
-            # check if database consist the same email
             username = form.username.data
-            name = form.name.data
-            email = form.email.data
-            mobile = form.mobile.data
-            password_hash = form.password_hash.data
-            user = Users.query.filter_by(email=email).first()
-            if user is None:
-                # hash the password
-                hashed_pw = generate_password_hash(form.password_hash.data, "pbkdf2:sha256")
-                user = Users(username=username, name=name, email=email, mobile=mobile, password_hash=hashed_pw)
-                db.session.add(user)
-                db.session.commit()
-                message = "User Added Successfully"
+            password = form.password.data
+            user = Users.query.filter_by(username=username).first()
+            if user:
+                # check the hash
+                if check_password_hash(user.password_hash, password):
+                    login_user(user)
+                    flash("Login Successful")
+                    return redirect(url_for('dashboard'))
+                else:
+                    flash("Incorrect Password")
             else:
-                message = "Email Registered Before"
-            
-            form.username.data = ''
-            form.name.data = ''
-            form.email.data = ''
-            form.mobile.data = ''
-            form.password_hash.data = ''
-            flash(message)
+                flash("The User Doesn't Exists")
 
-        user_list = Users.query.order_by(Users.date_added)
-
-        context = {
-            'form': form,
-            'user_list': user_list
+        content = {
+            'form': form
         }
-        return render_template('user_management/add_user.html', **context)
+        return render_template('login.html', **content)
     
-    @app.route('/user/update/<int:id>', methods=['GET', 'POST'])
-    def update_user(id):
-        form = UserForm()
+    @app.route('/logout', methods=['GET', 'POST'])
+    @login_required
+    def logout():
+        logout_user()
+        flash("You Have Been Logged Out")
+        return redirect(url_for('login'))
 
-        user_to_update = Users.query.get_or_404(id)
-        if request.method == 'POST':
-            user_to_update.username = request.form['username']
-            user_to_update.name = request.form['name']
-            user_to_update.email = request.form['email']
-            user_to_update.mobile = request.form['mobile']
-            try:
-                # save into database
-                db.session.commit()
-                flash("User Updated Successfully")
-            except:
-                flash("User Not Found")
+    @app.route('/dashboard', methods=['GET', 'POST'])
+    @login_required
+    def dashboard():
+        return render_template('dashboard.html')
+    
+    app.register_blueprint(manage_users, url_prefix='/user')
+    app.register_blueprint(manage_posts, url_prefix='/post')
+    
 
-        context = {
-            'form': form,
-            'user_to_update': user_to_update
-        }
-        return render_template('user_management/update_user.html', **context)
-
-    @app.route('/user/delete/<int:id>')
-    def delete_user(id):
-        form = UserForm()
-
-        user_to_delete = Users.query.get_or_404(id)
-
-        try:
-            db.session.delete(user_to_delete)
-            db.session.commit()
-            flash("User Deleted Successfully")
-        except:
-            flash("User Not Found")
-
-        user_list = Users.query.order_by(Users.date_added)
-
-        context = {
-            'form': form,
-            'user_list': user_list
-        }
-        return render_template('user_management/add_user.html', **context)
-
-    @app.route('/post/add', methods=['GET', 'POST'])
-    def add_post():
-        form = PostForm()
-
-        if form.validate_on_submit():
-            title = form.title.data
-            content = form.content.data
-            author = form.author.data
-            slug = form.slug.data
-            post = Posts(title=title, content=content, author=author, slug=slug)
-
-            form.title.data = ''
-            form.content.data = ''
-            form.author.data = ''
-            form.slug.data = ''
-
-            db.session.add(post)
-            db.session.commit()
-
-            flash("Blog Post Submitted Successfully")
-
-        content = {
-            'form': form
-        }
-        return render_template('post_management/add_post.html', **content)
-
-    @app.route('/post/<int:id>')
-    def post(id):
-        post = Posts.query.get_or_404(id)
-
-        content = {
-            'post': post
-        }
-        return render_template('post_management/post.html', **content)
-
-    @app.route('/post/update/<int:id>', methods=['GET', 'POST'])
-    def update_post(id):
-        post = Posts.query.get_or_404(id)
-        form = PostForm()
-
-        if form.validate_on_submit():
-            post.title = form.title.data
-            post.content = form.content.data
-            post.author = form.author.data
-            post.slug = form.slug.data
-            
-            db.session.add(post)
-            db.session.commit()
-
-            flash("Blog Post Updated Successfully")
-
-            return redirect(url_for('post', id=post.id))
-
-        form.title.data = post.title
-        form.content.data = post.content
-        form.author.data = post.author
-        form.slug.data = post.slug
-
-        content = {
-            'post': post,
-            'form': form
-        }
-        return render_template('post_management/update_post.html', **content)
-
-    @app.route('/post/delete/<int:id>')
-    def delete_post(id):
-        post_to_delete = Posts.query.get_or_404(id)
-
-        try:
-            db.session.delete(post_to_delete)
-            db.session.commit()
-            flash("Post Deleted Successfully")
-        except:
-            flash("Post Not Found")
-
-        posts = Posts.query.order_by(Posts.date_posted)
-
-        context = {
-            'posts': posts
-        }
-        return render_template('post_management/posts.html', **context)
-
-    @app.route('/posts')
-    def posts():
-        posts = Posts.query.order_by(Posts.date_posted)
-
-        content = {
-            'posts': posts
-        }
-        return render_template('post_management/posts.html', **content)
+    
 
     # create custom error pages
 

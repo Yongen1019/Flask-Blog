@@ -11,11 +11,11 @@
 
 <h2>Blog Posts</h2>
 
-<a href="{{ url_for('posts')}}" class="float-end btn btn-secondary">Back</a>
+<a href="{{ url_for('post_management.posts')}}" class="float-end btn btn-secondary">Back</a>
 
-<a href="{{ url_for('delete_post', id=post.id )}}" class="me-3 float-end btn btn-danger">Delete</a>
+<a href="{{ url_for('post_management.delete_post', id=post.id )}}" class="me-3 float-end btn btn-danger">Delete</a>
 
-<a href="{{ url_for('update_post', id=post.id )}}" class="me-3 float-end btn btn-success">Update</a>
+<a href="{{ url_for('post_management.update_post', id=post.id )}}" class="me-3 float-end btn btn-success">Update</a>
 
 <br><br>
 

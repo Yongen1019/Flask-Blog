@@ -9,7 +9,7 @@
     </div>
 {% endfor %}
 
-<h2>Blog Posts<a href="{{ url_for('add_post')}}" class="float-end btn btn-secondary">+</a></h2>
+<h2>Blog Posts<a href="{{ url_for('post_management.add_post')}}" class="float-end btn btn-secondary">+</a></h2>
 
 <br><br>
 
@@ -18,7 +18,7 @@
         <h4>{{ post.title }}</h4>
         <p class="mt-4 text-truncate">{{ post.content }}</p>
         <p class="small text-muted">
-            <span><a href="{{ url_for('post', id=post.id)}}" class="text-decoration-none">View</a></span>
+            <span><a href="{{ url_for('post_management.post', id=post.id)}}" class="text-decoration-none">View</a></span>
             <span class="float-end">By: {{ post.author }} | {{ post.date_posted }}</span>
         </p>
     </div>
