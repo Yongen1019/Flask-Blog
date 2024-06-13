@@ -1,4 +1,4 @@
-from flask import Flask, render_template, flash, request
+from flask import Flask, render_template, flash, request, redirect, url_for
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, SubmitField, BooleanField, ValidationError
 from wtforms.validators import DataRequired, EqualTo, Length
@@ -7,13 +7,15 @@ from datetime import datetime
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from werkzeug.security import generate_password_hash, check_password_hash
+from flask_login import UserMixin, login_user, LoginManager, login_required, logout_user, current_user
 
 # initialize the database
 db = SQLAlchemy()
 
 # create a user model
-class Users(db.Model):
+class Users(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(20), nullable=False, unique=True)
     name = db.Column(db.String(200), nullable=False)
     email = db.Column(db.String(120), nullable=False, unique=True)
     mobile = db.Column(db.String(120))
@@ -62,6 +64,7 @@ def create_app():
     # create a form class
     class UserForm(FlaskForm):
         name = StringField("Name", validators=[DataRequired()])
+        username = StringField("Username", validators=[DataRequired()])
         email = StringField("Email", validators=[DataRequired()])
         mobile = StringField("Mobile")
         password_hash = PasswordField('Password', validators=[DataRequired(), EqualTo('password_hash2', message='Password must match!!')])
@@ -123,6 +126,7 @@ def create_app():
         # validate form
         if form.validate_on_submit():
             # check if database consist the same email
+            username = form.username.data
             name = form.name.data
             email = form.email.data
             mobile = form.mobile.data
@@ -131,13 +135,14 @@ def create_app():
             if user is None:
                 # hash the password
                 hashed_pw = generate_password_hash(form.password_hash.data, "pbkdf2:sha256")
-                user = Users(name=name, email=email, mobile=mobile, password_hash=hashed_pw)
+                user = Users(username=username, name=name, email=email, mobile=mobile, password_hash=hashed_pw)
                 db.session.add(user)
                 db.session.commit()
                 message = "User Added Successfully"
             else:
                 message = "Email Registered Before"
             
+            form.username.data = ''
             form.name.data = ''
             form.email.data = ''
             form.mobile.data = ''
@@ -158,6 +163,7 @@ def create_app():
 
         user_to_update = Users.query.get_or_404(id)
         if request.method == 'POST':
+            user_to_update.username = request.form['username']
             user_to_update.name = request.form['name']
             user_to_update.email = request.form['email']
             user_to_update.mobile = request.form['mobile']
@@ -220,6 +226,71 @@ def create_app():
             'form': form
         }
         return render_template('post_management/add_post.html', **content)
+
+    @app.route('/post/<int:id>')
+    def post(id):
+        post = Posts.query.get_or_404(id)
+
+        content = {
+            'post': post
+        }
+        return render_template('post_management/post.html', **content)
+
+    @app.route('/post/update/<int:id>', methods=['GET', 'POST'])
+    def update_post(id):
+        post = Posts.query.get_or_404(id)
+        form = PostForm()
+
+        if form.validate_on_submit():
+            post.title = form.title.data
+            post.content = form.content.data
+            post.author = form.author.data
+            post.slug = form.slug.data
+            
+            db.session.add(post)
+            db.session.commit()
+
+            flash("Blog Post Updated Successfully")
+
+            return redirect(url_for('post', id=post.id))
+
+        form.title.data = post.title
+        form.content.data = post.content
+        form.author.data = post.author
+        form.slug.data = post.slug
+
+        content = {
+            'post': post,
+            'form': form
+        }
+        return render_template('post_management/update_post.html', **content)
+
+    @app.route('/post/delete/<int:id>')
+    def delete_post(id):
+        post_to_delete = Posts.query.get_or_404(id)
+
+        try:
+            db.session.delete(post_to_delete)
+            db.session.commit()
+            flash("Post Deleted Successfully")
+        except:
+            flash("Post Not Found")
+
+        posts = Posts.query.order_by(Posts.date_posted)
+
+        context = {
+            'posts': posts
+        }
+        return render_template('post_management/posts.html', **context)
+
+    @app.route('/posts')
+    def posts():
+        posts = Posts.query.order_by(Posts.date_posted)
+
+        content = {
+            'posts': posts
+        }
+        return render_template('post_management/posts.html', **content)
 
     # create custom error pages
 
