@@ -21,6 +21,7 @@
             <span><a href="{{ url_for('post_management.post', id=post.id)}}" class="text-decoration-none">View</a></span>
             <span class="float-end">By: {{ post.user.name }} | {{ post.date_posted }}</span>
         </p>
+        <p class="small fst-italic text-body-secondary text-end clearfix"><span class="float-end col-sm-9">{{ post.user.about_author }}</span></p>
     </div>
 {% endfor %}
 

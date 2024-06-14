@@ -25,6 +25,7 @@
                 <h5 class="card-title">{{ current_user.name }}</h5>
                 <p class="card-text">{{ current_user.email }}</p>
                 <p class="card-text">{{ current_user.mobile }}</p>
+                <p class="card-text fst-italic text-body-secondary">{{ current_user.about_author }}</p>
                 <a href="{{ url_for('user_management.update_user', id=current_user.id) }}" class="btn btn-secondary">Update User Profile</a>
             </div>
         </div>

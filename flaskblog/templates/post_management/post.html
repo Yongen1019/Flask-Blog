@@ -27,6 +27,7 @@
     <h4>{{ post.title }}</h4>
     <p class="mt-4">{{ post.content|safe }}</p>
     <p class="small text-muted text-end">By: {{ post.user.name }} | {{ post.date_posted }}
+    <p class="small fst-italic text-body-secondary text-end clearfix"><span class="float-end col-sm-9">{{ post.user.about_author }}</span></p>
 </div>
 
 {% endblock %}

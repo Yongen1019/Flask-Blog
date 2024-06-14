@@ -82,6 +82,7 @@ def update_user(id):
         user_to_update.name = request.form['name']
         user_to_update.email = request.form['email']
         user_to_update.mobile = request.form['mobile']
+        user_to_update.about_author = request.form['about_author']
         try:
             # save into database
             db.session.commit()
