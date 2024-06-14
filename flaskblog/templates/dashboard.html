@@ -16,11 +16,18 @@
     <div class="card-header">
         {{ current_user.username }}
     </div>
-    <div class="card-body">
-        <h5 class="card-title">{{ current_user.name }}</h5>
-        <p class="card-text">{{ current_user.email }}</p>
-        <p class="card-text">{{ current_user.mobile }}</p>
-        <a href="{{ url_for('user_management.update_user', id=current_user.id) }}" class="btn btn-secondary">Update User Profile</a>
+    <div class="d-inline-flex">
+        <div class="col-md-3 p-4 d-flex align-items-center justify-content-center">
+            <img src="{{ url_for('static', filename='images/user.png') }}" class="img-fluid rounded-start" width="150" height="150">
+        </div>
+        <div class="col-md-9 p-4">
+            <div class="card-body">
+                <h5 class="card-title">{{ current_user.name }}</h5>
+                <p class="card-text">{{ current_user.email }}</p>
+                <p class="card-text">{{ current_user.mobile }}</p>
+                <a href="{{ url_for('user_management.update_user', id=current_user.id) }}" class="btn btn-secondary">Update User Profile</a>
+            </div>
+        </div>
     </div>
     <div class="card-footer text-body-secondary">
         Joined since {{ current_user.date_added }}

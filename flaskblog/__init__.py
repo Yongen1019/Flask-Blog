@@ -87,7 +87,8 @@ def create_app():
             posts = Posts.query.filter(Posts.content.like('%' + search_input + '%')).order_by(Posts.title).all()
 
             content = {
-                'posts': posts
+                'posts': posts,
+                'search_input': search_input
             }
             return render_template('search.html', **content)
     
