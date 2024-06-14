@@ -4,7 +4,8 @@ from werkzeug.security import check_password_hash
 from flask_login import login_user, LoginManager, login_required, logout_user
 from webforms import LoginForm, PasswordForm, SearchForm
 from models import db, Users, Posts
-from .views.user_management import manage_users
+from flask_ckeditor import CKEditor
+from .views.user_management import manage_users 
 from .views.post_management import manage_posts
 
 def create_app():
@@ -21,6 +22,9 @@ def create_app():
     db.init_app(app)
     migrate = Migrate(app, db)
 
+    # add CKEditor for rich text textarea
+    ckeditor = CKEditor(app)
+    
     # Flask_Login stuff
     login_manager = LoginManager()
     login_manager.init_app(app)
