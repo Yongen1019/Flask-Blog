@@ -8,17 +8,20 @@ from flask_ckeditor import CKEditor
 from .views.user_management import manage_users 
 from .views.post_management import manage_posts
 from .views.admin import admins
+from os.path import join, dirname, realpath
 
 def create_app():
     # create a flask instance
     app = Flask(__name__)
     # add database
     # old sqlite db
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.db'
+    #app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.db'
     # new mysql db
     app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:abc123@localhost/flaskblog'
+    # upload image folder
+    app.config['UPLOAD_FOLDER'] = join(dirname(realpath(__file__)), 'static/images/')
     # secret key
-    app.secret_key = 'hday9o32ej382jjdi09hh3'
+    app.config['SECRET_KEY'] = 'hday9o32ej382jjdi09hh3'
 
     db.init_app(app)
     migrate = Migrate(app, db)

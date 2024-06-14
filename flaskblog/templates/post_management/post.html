@@ -27,7 +27,16 @@
     <h4>{{ post.title }}</h4>
     <p class="mt-4">{{ post.content|safe }}</p>
     <p class="small text-muted text-end">By: {{ post.user.name }} | {{ post.date_posted }}
-    <p class="small fst-italic text-body-secondary text-end clearfix"><span class="float-end col-sm-9">{{ post.user.about_author }}</span></p>
+    <div class="row small fst-italic text-body-secondary text-end clearfix">
+        <div class="col-sm-2">
+            {% if current_user.profile_pic %}
+                <img src="{{ url_for('static', filename='images/' + current_user.profile_pic) }}" class="img-fluid rounded" width="150" height="150">
+            {% else %}
+                <img src="{{ url_for('static', filename='images/user.png') }}" class="img-fluid rounded-start" width="150" height="150">
+            {% endif %}
+        </div>
+        <span class="float-end col-sm-10">{{ post.user.about_author }}</span>
+    </div>
 </div>
 
 {% endblock %}

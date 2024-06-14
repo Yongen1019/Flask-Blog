@@ -13,8 +13,12 @@
 
     <h4>Update User</h4>
 
+    <a href="{{ url_for('dashboard')}}" class="float-end btn btn-secondary">Back</a>
+
+    <br><br>
+
     <div class="shadow p-3 mb-5 bg-body-tertiary rounded">
-        <form accept="/user/update/{{ user_to_update.id }}" method="POST">
+        <form accept="/user/update/{{ user_to_update.id }}" method="POST" enctype="multipart/form-data">
             {{ form.hidden_tag() }}
 
             {{ form.name.label }}
@@ -35,6 +39,10 @@
                 
             {{ form.about_author.label }}
             <textarea name="about_author" class="form-control" rows="5">{{ user_to_update.about_author }}</textarea>
+            <br>
+                
+            {{ form.profile_pic.label }}
+            {{ form.profile_pic(class="form-control", value=user_to_update.profile_pic) }}
                 
             {{ form.submit(class="mt-3 btn btn-secondary") }}
             <a href="{{ url_for('user_management.delete_user', id=user_to_update.id) }}" class="mt-3 btn btn-danger">Remove</a>
