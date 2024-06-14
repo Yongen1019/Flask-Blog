@@ -7,6 +7,7 @@ from models import db, Users, Posts
 from flask_ckeditor import CKEditor
 from .views.user_management import manage_users 
 from .views.post_management import manage_posts
+from .views.admin import admins
 
 def create_app():
     # create a flask instance
@@ -92,6 +93,7 @@ def create_app():
     
     app.register_blueprint(manage_users, url_prefix='/user')
     app.register_blueprint(manage_posts, url_prefix='/post')
+    app.register_blueprint(admins, url_prefix='/admin')
     
 
     # custom error pages
