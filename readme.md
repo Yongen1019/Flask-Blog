@@ -1,6 +1,7 @@
-Set-ExecutionPolicy Unrestricted -Scope Process
-venv/Scripts/activate
-flask run
+Run
+- Set-ExecutionPolicy Unrestricted -Scope Process
+- venv/Scripts/activate
+- flask run
 
 System Demo Video
-https://github.com/Yongen1019/Flask-Blog/blob/main/System%20Demo%20Video.mp4
+- https://github.com/Yongen1019/Flask-Blog/blob/main/System%20Demo%20Video.mp4
