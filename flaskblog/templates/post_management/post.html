@@ -29,8 +29,8 @@
     <p class="small text-muted text-end">By: {{ post.user.name }} | {{ post.date_posted }}
     <div class="row small fst-italic text-body-secondary text-end clearfix">
         <div class="col-sm-2">
-            {% if current_user.profile_pic %}
-                <img src="{{ url_for('static', filename='images/' + current_user.profile_pic) }}" class="img-fluid rounded" width="150" height="150">
+            {% if post.user.profile_pic %}
+                <img src="{{ url_for('static', filename='images/' + post.user.profile_pic) }}" class="img-fluid rounded" width="150" height="150">
             {% else %}
                 <img src="{{ url_for('static', filename='images/user.png') }}" class="img-fluid rounded-start" width="150" height="150">
             {% endif %}
